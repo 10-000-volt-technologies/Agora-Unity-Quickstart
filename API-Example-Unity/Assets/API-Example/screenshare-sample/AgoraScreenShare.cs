@@ -38,7 +38,9 @@ public class AgoraScreenShare : MonoBehaviour
 		CheckAppId();	
 		InitEngine();
 		JoinChannel();
-	}
+        //TestRectCrop(0);
+
+    }
 
     void Update() 
     {
@@ -73,7 +75,27 @@ public class AgoraScreenShare : MonoBehaviour
         }
     }
 
-	void InitEngine()
+    void TestRectCrop(int order)
+    {
+        ScreenCaptureParameters sparams = new ScreenCaptureParameters
+        {
+            captureMouseCursor = true,
+            frameRate = 30
+        };
+
+        mRtcEngine.StopScreenCapture();
+        // Assuming you have two display monitors, each of 1920x1080, position left to right:
+        Rectangle screenRect = new Rectangle() { x = 0, y = 0, width = 1920 * 2, height = 1080 };
+        Rectangle regionRect = new Rectangle() { x = order * 1920, y = 0, width = 1920, height = 1080 };
+
+        int rc = mRtcEngine.StartScreenCaptureByScreenRect(screenRect,
+            regionRect,
+            default(ScreenCaptureParameters)
+            );
+        if (rc != 0) Debug.LogWarning("rc = " + rc);
+    }
+
+    void InitEngine()
 	{
         mRtcEngine = IRtcEngine.GetEngine(APP_ID);
 		mRtcEngine.SetLogFile("log.txt");

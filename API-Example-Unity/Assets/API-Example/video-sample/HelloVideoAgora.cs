@@ -8,10 +8,10 @@ using agora_utilities;
 public class HelloVideoAgora : MonoBehaviour {
 	
     [SerializeField]
-    private string APP_ID = "";
+    private string APP_ID = "999988d7c6884c2c83415838c43674dc";
 
     [SerializeField]
-    private string TOKEN = "";
+    private string TOKEN = "006999988d7c6884c2c83415838c43674dcIAC79dURK/4pYdCg/eWxQeafLkVzvqNdgKHxntyKJnxg04H/KYQAAAAAEAB33sfLdZmbYAEAAQBFmJtg";
 
     [SerializeField]
     private string CHANNEL_NAME = "YOUR_CHANNEL_NAME";
