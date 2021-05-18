@@ -38,8 +38,7 @@ public class AgoraScreenShare : MonoBehaviour
 		CheckAppId();	
 		InitEngine();
 		JoinChannel();
-        //TestRectCrop(0);
-
+        TestRectCrop(0);
     }
 
     void Update() 
@@ -68,7 +67,7 @@ public class AgoraScreenShare : MonoBehaviour
             externalVideoFrame.cropTop = 10;
             externalVideoFrame.cropRight = 10;
             externalVideoFrame.cropBottom = 10;
-            externalVideoFrame.rotation = 180;
+            externalVideoFrame.rotation = 0;
             externalVideoFrame.timestamp = i++;
             int a = rtc.PushVideoFrame(externalVideoFrame);
             Debug.Log("PushVideoFrame ret = " + a);
@@ -80,17 +79,17 @@ public class AgoraScreenShare : MonoBehaviour
         ScreenCaptureParameters sparams = new ScreenCaptureParameters
         {
             captureMouseCursor = true,
-            frameRate = 30
+            frameRate = 60
         };
 
         mRtcEngine.StopScreenCapture();
         // Assuming you have two display monitors, each of 1920x1080, position left to right:
         Rectangle screenRect = new Rectangle() { x = 0, y = 0, width = 1920 * 2, height = 1080 };
-        Rectangle regionRect = new Rectangle() { x = order * 1920, y = 0, width = 1920, height = 1080 };
+        Rectangle regionRect = new Rectangle() { x = 1 * 1920, y = 0, width = 1920, height = 1080 };
 
         int rc = mRtcEngine.StartScreenCaptureByScreenRect(screenRect,
             regionRect,
-            default(ScreenCaptureParameters)
+            sparams
             );
         if (rc != 0) Debug.LogWarning("rc = " + rc);
     }
@@ -103,8 +102,8 @@ public class AgoraScreenShare : MonoBehaviour
 		mRtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
 		mRtcEngine.EnableAudio();
 		mRtcEngine.EnableVideo();
-		mRtcEngine.EnableVideoObserver();
-		mRtcEngine.SetExternalVideoSource(true, false);
+		//mRtcEngine.EnableVideoObserver();
+		//mRtcEngine.SetExternalVideoSource(true, false);
         mRtcEngine.OnJoinChannelSuccess += OnJoinChannelSuccessHandler;
         mRtcEngine.OnLeaveChannel += OnLeaveChannelHandler;
         mRtcEngine.OnWarning += OnSDKWarningHandler;

@@ -285,12 +285,12 @@ public class HelloVideoAgora : MonoBehaviour
             Debug.Log("Canvas is null video view");
         }
         // set up transform
-        go.transform.Rotate(0f, 0.0f, 180.0f);
+        //go.transform.Rotate(0f, 0.0f, 180f);
         float xPos = UnityEngine.Random.Range(Offset - Screen.width / 2f, Screen.width / 2f - Offset);
         float yPos = UnityEngine.Random.Range(Offset, Screen.height / 2f - Offset);
         Debug.Log("position x " + xPos + " y: " + yPos);
         go.transform.localPosition = new Vector3(xPos, yPos, 0f);
-        go.transform.localScale = new Vector3(3f, 4f, 1f);
+        go.transform.localScale = new Vector3(10f, 8f, 1f);
 
         // configure videoSurface
         VideoSurface videoSurface = go.AddComponent<VideoSurface>();

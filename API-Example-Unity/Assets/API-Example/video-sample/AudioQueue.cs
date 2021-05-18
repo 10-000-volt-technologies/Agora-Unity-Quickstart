@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using agora_gaming_rtc;
 
+
 public class AudioQueue : MonoBehaviour
 {
     public Queue<float[]> audioQueue = new Queue<float[]>();
@@ -30,6 +31,7 @@ public class AudioQueue : MonoBehaviour
             {
 
                 audioFrameClip = AudioClip.Create("clip", audioFrame.samples, audioFrame.channels, audioFrame.samplesPerSec, false);
+                UnityEngine.Debug.Log("samples: " + audioFrame.samples + " channels: " + audioFrame.channels + " samplesPerSec: " + audioFrame.samplesPerSec);
                 audioSource.clip = audioFrameClip;
                 clipCreated = true;
             }
@@ -37,6 +39,13 @@ public class AudioQueue : MonoBehaviour
 
 
         float[] clipFloat = PCM2Floats(audioFrame.buffer);
+
+        //byte[] buffer = audioFrame.buffer;
+        //var waveBuffer = new WaveBuffer(buffer);
+        // now you can access the samples using waveBuffer.ShortBuffer, e.g.:
+       // var sample = waveBuffer.ShortBuffer[sampleIndex];
+
+        UnityEngine.Debug.Log("Clip created: samples: " + audioFrame.samples + " channels: " + audioFrame.channels + " samplesPerSec: " + audioFrame.samplesPerSec);
 
 
         audioQueue.Enqueue(clipFloat);
@@ -74,4 +83,5 @@ public class AudioQueue : MonoBehaviour
 
         return samples;
     }
+
 }
