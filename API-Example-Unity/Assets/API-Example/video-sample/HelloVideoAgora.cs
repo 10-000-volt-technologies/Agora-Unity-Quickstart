@@ -49,7 +49,23 @@ public class HelloVideoAgora : MonoBehaviour
         InitEngine();
         SetupAudio();
         JoinChannel();
-	}
+
+        // Create a VideoEncoderConfiguration instance. See the descriptions of the parameters in API Reference.
+        VideoEncoderConfiguration config = new VideoEncoderConfiguration();
+        // Sets the video resolution.
+        config.dimensions.width = 1280;
+        config.dimensions.height = 720;
+        // Sets the video frame rate.
+        config.frameRate = FRAME_RATE.FRAME_RATE_FPS_60;
+        // Sets the video encoding bitrate (Kbps).
+        config.bitrate = 1710;
+        // Sets the adaptive orientation mode. See the description in API Reference.
+        config.orientationMode = ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE;
+        // Sets the video encoding degradation preference under limited bandwidth. MIANTAIN_QUALITY means to degrade the frame rate to maintain the video quality.
+        config.degradationPreference = DEGRADATION_PREFERENCE.MAINTAIN_FRAMERATE;
+        // Sets the video encoder configuration.
+        mRtcEngine.SetVideoEncoderConfiguration(config);
+    }
 
 	// Update is called once per frame
 	void Update () {
@@ -66,12 +82,18 @@ public class HelloVideoAgora : MonoBehaviour
 	void InitEngine()
 	{
         mRtcEngine = IRtcEngine.GetEngine(APP_ID);
-		mRtcEngine.SetLogFile("log.txt");
-		mRtcEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
-		mRtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+
+
+
+
+        mRtcEngine.SetLogFile("log.txt");
+		//mRtcEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
+		//mRtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_AUDIENCE);
 		mRtcEngine.EnableAudio();
 		mRtcEngine.EnableVideo();
 		mRtcEngine.EnableVideoObserver();
+
+
         mRtcEngine.OnJoinChannelSuccess += OnJoinChannelSuccessHandler;
         mRtcEngine.OnLeaveChannel += OnLeaveChannelHandler;
         mRtcEngine.OnWarning += OnSDKWarningHandler;
@@ -102,7 +124,7 @@ public class HelloVideoAgora : MonoBehaviour
     void OnPlaybackAudioFrameHandler(agora_gaming_rtc.AudioFrame audioFrame)
     {
         // queue audio frame buffer data and play through unity audio source
-        queue.Queue(audioFrame);
+        //queue.Queue(audioFrame);
     }
 
     private float[] ConvertByteToFloat(byte[] array)
@@ -233,7 +255,7 @@ public class HelloVideoAgora : MonoBehaviour
             videoSurface.SetForUser(uid);
             videoSurface.SetEnable(true);
             videoSurface.SetVideoSurfaceType(AgoraVideoSurfaceType.RawImage);
-            videoSurface.SetGameFps(30);
+            videoSurface.SetGameFps(60);
         }
     }
 
@@ -285,12 +307,12 @@ public class HelloVideoAgora : MonoBehaviour
             Debug.Log("Canvas is null video view");
         }
         // set up transform
-        //go.transform.Rotate(0f, 0.0f, 180f);
+        go.transform.Rotate(0f, -180.0f, 180f);
         float xPos = UnityEngine.Random.Range(Offset - Screen.width / 2f, Screen.width / 2f - Offset);
         float yPos = UnityEngine.Random.Range(Offset, Screen.height / 2f - Offset);
         Debug.Log("position x " + xPos + " y: " + yPos);
         go.transform.localPosition = new Vector3(xPos, yPos, 0f);
-        go.transform.localScale = new Vector3(10f, 8f, 1f);
+        go.transform.localScale = new Vector3(12f, 8f, 1f);
 
         // configure videoSurface
         VideoSurface videoSurface = go.AddComponent<VideoSurface>();

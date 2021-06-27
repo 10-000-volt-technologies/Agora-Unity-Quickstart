@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 [Serializable]
 public class TokenObject {
-  public string rtcToken;
+  public string token;
 }
 
 namespace agora_utilities
@@ -16,10 +16,13 @@ namespace agora_utilities
     public static IEnumerator FetchToken(
         string url, string channel, int userId, Action<string> callback = null
     ) {
-      UnityWebRequest request = UnityWebRequest.Get(string.Format(
-        "{0}/rtc/{1}/publisher/uid/{2}/", url, channel, userId
-      ));
-      yield return request.SendWebRequest();
+      //UnityWebRequest request = UnityWebRequest.Get(string.Format(
+      //  "{0}/rtc/{1}/publisher/uid/{2}/", url, channel, userId
+      //));
+            UnityWebRequest request = UnityWebRequest.Get(string.Format(
+            "{0}/access_token?channel={1}&uid={2}", url, channel, userId
+            ));
+            yield return request.SendWebRequest();
 
       if (request.isNetworkError || request.isHttpError) {
         Debug.Log(request.error);
@@ -31,7 +34,7 @@ namespace agora_utilities
         request.downloadHandler.text
       );
 
-      callback(tokenInfo.rtcToken);
+      callback(tokenInfo.token);
     }
   }
 }

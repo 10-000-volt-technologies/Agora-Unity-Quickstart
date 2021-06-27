@@ -8,21 +8,21 @@ using agora_utilities;
 
 public class AgoraScreenShare : MonoBehaviour 
 {
+    private string APP_ID = "95f80633644649e091a5c9035338683e";
+
+    private static string channelToken = "";
+    private static string tokenBase = "https://token-server-node.herokuapp.com";
+
+    private CONNECTION_STATE_TYPE state = CONNECTION_STATE_TYPE.CONNECTION_STATE_DISCONNECTED;
 
     [SerializeField]
-    private string APP_ID = "YOUR_APPID";
-
-    [SerializeField]
-    private string TOKEN = "";
-
-    [SerializeField]
-    private string CHANNEL_NAME = "YOUR_CHANNEL_NAME";
    	public Text logText;
     private Logger logger;
 	public IRtcEngine mRtcEngine = null;
-	private static string channelName = "Agora_Channel";
+	private static string channelName = "881";
 	private const float Offset = 100;
-	private Texture2D mTexture;
+    //private Texture2D mTexture;
+    public Texture2D mTexture;
     private Rect mRect;	
 	private int i = 0;
     private WebCamTexture webCameraTexture;
@@ -30,15 +30,18 @@ public class AgoraScreenShare : MonoBehaviour
 	public Vector2 cameraSize = new Vector2(640, 480);
 	public int cameraFPS = 15;
 
+    public RenderTexture renderTexture;
+
 	// Use this for initialization
 	void Start () 
 	{
-        InitCameraDevice();
+        //InitCameraDevice();
         InitTexture();
 		CheckAppId();	
 		InitEngine();
-		JoinChannel();
-        TestRectCrop(0);
+        setupVideoEncodingConfig();
+        JoinChannel();
+        //TestRectCrop(0);
     }
 
     void Update() 
@@ -79,8 +82,10 @@ public class AgoraScreenShare : MonoBehaviour
         ScreenCaptureParameters sparams = new ScreenCaptureParameters
         {
             captureMouseCursor = true,
-            frameRate = 60
+            frameRate = 60,
+            bitrate = 6300
         };
+
 
         mRtcEngine.StopScreenCapture();
         // Assuming you have two display monitors, each of 1920x1080, position left to right:
@@ -91,6 +96,7 @@ public class AgoraScreenShare : MonoBehaviour
             regionRect,
             sparams
             );
+        Debug.Log("start screen capture result " + rc);
         if (rc != 0) Debug.LogWarning("rc = " + rc);
     }
 
@@ -98,12 +104,12 @@ public class AgoraScreenShare : MonoBehaviour
 	{
         mRtcEngine = IRtcEngine.GetEngine(APP_ID);
 		mRtcEngine.SetLogFile("log.txt");
-		mRtcEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
-		mRtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
-		mRtcEngine.EnableAudio();
+        mRtcEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
+        mRtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+        mRtcEngine.EnableAudio();
 		mRtcEngine.EnableVideo();
-		//mRtcEngine.EnableVideoObserver();
-		//mRtcEngine.SetExternalVideoSource(true, false);
+		mRtcEngine.EnableVideoObserver();
+		mRtcEngine.SetExternalVideoSource(true, false);
         mRtcEngine.OnJoinChannelSuccess += OnJoinChannelSuccessHandler;
         mRtcEngine.OnLeaveChannel += OnLeaveChannelHandler;
         mRtcEngine.OnWarning += OnSDKWarningHandler;
@@ -113,13 +119,58 @@ public class AgoraScreenShare : MonoBehaviour
         mRtcEngine.OnUserOffline += OnUserOfflineHandler;
 	}
 
-	void JoinChannel()
-	{
-        int ret = mRtcEngine.JoinChannelByKey(TOKEN, CHANNEL_NAME, "", 0);
-        Debug.Log(string.Format("JoinChannel ret: ${0}", ret));
-	}
+    void setupVideoEncodingConfig() {
+        // Create a VideoEncoderConfiguration instance. See the descriptions of the parameters in API Reference.
+        VideoEncoderConfiguration config = new VideoEncoderConfiguration();
+        // Sets the video resolution.
+        config.dimensions.width = 1280;
+        config.dimensions.height = 720;
+        // Sets the video frame rate.
+        config.frameRate = FRAME_RATE.FRAME_RATE_FPS_30;
+        // Sets the video encoding bitrate (Kbps).
+        config.bitrate = 3420;
+        // Sets the adaptive orientation mode. See the description in API Reference.
+        config.orientationMode = ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE;
+        // Sets the video encoding degradation preference under limited bandwidth. MIANTAIN_QUALITY means to degrade the frame rate to maintain the video quality.
+        config.degradationPreference = DEGRADATION_PREFERENCE.MAINTAIN_QUALITY;
+        // Sets the video encoder configuration.
+        mRtcEngine.SetVideoEncoderConfiguration(config);
+    }
 
-	void CheckAppId()
+    void JoinChannel()
+    {
+        if (channelToken.Length == 0)
+        {
+            StartCoroutine(HelperClass.FetchToken(tokenBase, channelName, 0, this.RenewOrJoinToken));
+            return;
+        }
+        mRtcEngine.JoinChannelByKey(channelToken, channelName, "", 0);
+    }
+
+    void RenewOrJoinToken(string newToken)
+    {
+        AgoraScreenShare.channelToken = newToken;
+        if (state == CONNECTION_STATE_TYPE.CONNECTION_STATE_DISCONNECTED
+            || state == CONNECTION_STATE_TYPE.CONNECTION_STATE_DISCONNECTED
+            || state == CONNECTION_STATE_TYPE.CONNECTION_STATE_FAILED
+        )
+        {
+            // If we are not connected yet, connect to the channel as normal
+            JoinChannel();
+        }
+        else
+        {
+            // If we are already connected, we should just update the token
+            UpdateToken();
+        }
+    }
+
+    void UpdateToken()
+    {
+        mRtcEngine.RenewToken(AgoraScreenShare.channelToken);
+    }
+
+    void CheckAppId()
     {
         logger = new Logger(logText);
         logger.DebugAssert(APP_ID.Length > 10, "Please fill in your appId in Canvas!!!!");
@@ -128,6 +179,7 @@ public class AgoraScreenShare : MonoBehaviour
     void InitTexture()
     {
         mRect = new Rect(0, 0, Screen.width, Screen.height);
+        //mRect = GameObject.Find("outputImage").GetComponent<RectTransform>().rect;
         mTexture = new Texture2D((int)mRect.width, (int)mRect.height, TextureFormat.RGBA32, false);
     }
 
@@ -205,20 +257,22 @@ public class AgoraScreenShare : MonoBehaviour
 
     private void makeVideoView(uint uid)
     {
-        GameObject go = GameObject.Find(uid.ToString());
-        if (!ReferenceEquals(go, null))
-        {
-            return; // reuse
-        }
+        // GameObject go = GameObject.Find(uid.ToString());
+        //if (!ReferenceEquals(go, null))
+        // {
+        //     return; // reuse
+        // }
 
         // create a GameObject and assign to this new user
-        VideoSurface videoSurface = makeImageSurface(uid.ToString());
+        //VideoSurface videoSurface = makeImageSurface(uid.ToString());
+        VideoSurface videoSurface = makePlaneSurface(uid.ToString());
+        //VideoSurface videoSurface = gameObject.AddComponent<VideoSurface>();
         if (!ReferenceEquals(videoSurface, null))
         {
             // configure videoSurface
             videoSurface.SetForUser(uid);
             videoSurface.SetEnable(true);
-            videoSurface.SetVideoSurfaceType(AgoraVideoSurfaceType.RawImage);
+            videoSurface.SetVideoSurfaceType(AgoraVideoSurfaceType.Renderer);
             videoSurface.SetGameFps(30);
         }
     }
@@ -258,6 +312,7 @@ public class AgoraScreenShare : MonoBehaviour
         go.name = goName;
         // to be renderered onto
         go.AddComponent<RawImage>();
+        //go.GetComponent<RawImage>().texture = renderTexture;
         // make the object draggable
         go.AddComponent<UIElementDrag>();
         GameObject canvas = GameObject.Find("VideoCanvas");

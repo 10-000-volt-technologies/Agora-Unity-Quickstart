@@ -8,24 +8,31 @@ using agora_utilities;
 public class HelloVideoTokenAgora : MonoBehaviour {
 
   [SerializeField]
-  private string APP_ID = "YOUR_APPID";
+  private string APP_ID = "95f80633644649e091a5c9035338683e";
   public Text logText;
   private Logger logger;
   private IRtcEngine mRtcEngine = null;
   private const float Offset = 100;
-  private static string channelName = "Agora_Channel";
+  private static string channelName = "881";
   private static string channelToken = "";
-  private static string tokenBase = "http://localhost:8080";
+  private static string tokenBase = "https://token-server-node.herokuapp.com";
   private CONNECTION_STATE_TYPE state = CONNECTION_STATE_TYPE.CONNECTION_STATE_DISCONNECTED;
+
+    public RawImage webCamRawImage;
+
+    public RenderTexture agoraWebcamIn;
 
 	// Use this for initialization
 	void Start () {
 		CheckAppId();
 		InitEngine();
 		JoinChannel();
-	}
 
-  void RenewOrJoinToken(string newToken) {
+    }
+
+
+
+    void RenewOrJoinToken(string newToken) {
     HelloVideoTokenAgora.channelToken = newToken;
     if (state == CONNECTION_STATE_TYPE.CONNECTION_STATE_DISCONNECTED
         || state == CONNECTION_STATE_TYPE.CONNECTION_STATE_DISCONNECTED
@@ -42,7 +49,7 @@ public class HelloVideoTokenAgora : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		PermissionHelper.RequestMicrophontPermission();
-		PermissionHelper.RequestCameraPermission();
+		//PermissionHelper.RequestCameraPermission();
 	}
 
   void UpdateToken()
@@ -60,8 +67,8 @@ public class HelloVideoTokenAgora : MonoBehaviour {
   {
     mRtcEngine = IRtcEngine.GetEngine(APP_ID);
     mRtcEngine.SetLogFile("log.txt");
-    mRtcEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
-    mRtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+   // mRtcEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
+    //mRtcEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
     mRtcEngine.EnableAudio();
     mRtcEngine.EnableVideo();
     mRtcEngine.EnableVideoObserver();
@@ -75,7 +82,9 @@ public class HelloVideoTokenAgora : MonoBehaviour {
     mRtcEngine.OnTokenPrivilegeWillExpire += OnTokenPrivilegeWillExpireHandler;
   }
 
-  void JoinChannel()
+
+
+   void JoinChannel()
   {
     if (channelToken.Length == 0) {
       StartCoroutine(HelperClass.FetchToken(tokenBase, channelName, 0, this.RenewOrJoinToken));
@@ -90,7 +99,7 @@ public class HelloVideoTokenAgora : MonoBehaviour {
     logger.UpdateLog(string.Format("onJoinChannelSuccess channelName: {0}, uid: {1}, elapsed: {2}", channelName, uid, elapsed));
     logger.UpdateLog(string.Format("New Token: {0}", HelloVideoTokenAgora.channelToken));
     // HelperClass.FetchToken(tokenBase, channelName, 0, this.RenewOrJoinToken);
-    makeVideoView(0);
+    //makeVideoView(0);
   }
 
   void OnLeaveChannelHandler(RtcStats stats)
@@ -174,6 +183,18 @@ public class HelloVideoTokenAgora : MonoBehaviour {
             videoSurface.SetVideoSurfaceType(AgoraVideoSurfaceType.RawImage);
             videoSurface.SetGameFps(30);
         }
+
+        // add MSKBridgeImage/MSKController to handle the chromaKey
+        GameObject mskPrefab = Instantiate(Resources.Load("MSKPrefab") as GameObject);
+
+        mskPrefab.transform.parent = GameObject.Find(uid.ToString()).transform;
+
+
+        // assign rawImage to mskBridgeImage
+        //mskPrefab.GetComponent<chromaKey>().mskBridgeImage.targetRawImage = videoSurface.GetComponent<RawImage>();
+
+        //GameObject.Find(uid.ToString())
+        // mskPrefab.transform. = go.transform;
     }
 
     // VIDEO TYPE 1: 3D Object
@@ -188,8 +209,8 @@ public class HelloVideoTokenAgora : MonoBehaviour {
         go.name = goName;
         // set up transform
         go.transform.Rotate(-90.0f, 0.0f, 0.0f);
-        float yPos = Random.Range(3.0f, 5.0f);
-        float xPos = Random.Range(-2.0f, 2.0f);
+        float yPos = UnityEngine.Random.Range(3.0f, 5.0f);
+        float xPos = UnityEngine.Random.Range(-2.0f, 2.0f);
         go.transform.position = new Vector3(xPos, yPos, 0f);
         go.transform.localScale = new Vector3(0.25f, 0.5f, .5f);
 
@@ -224,12 +245,12 @@ public class HelloVideoTokenAgora : MonoBehaviour {
             Debug.Log("Canvas is null video view");
         }
         // set up transform
-        go.transform.Rotate(0f, 0.0f, 180.0f);
-        float xPos = Random.Range(Offset - Screen.width / 2f, Screen.width / 2f - Offset);
-        float yPos = Random.Range(Offset, Screen.height / 2f - Offset);
+        go.transform.Rotate(0f, -180.0f, 180f);
+        float xPos = UnityEngine.Random.Range(Offset - Screen.width / 2f, Screen.width / 2f - Offset);
+        float yPos = UnityEngine.Random.Range(Offset, Screen.height / 2f - Offset);
         Debug.Log("position x " + xPos + " y: " + yPos);
         go.transform.localPosition = new Vector3(xPos, yPos, 0f);
-        go.transform.localScale = new Vector3(3f, 4f, 1f);
+        go.transform.localScale = new Vector3(12f, 8f, 1f);
 
         // configure videoSurface
         VideoSurface videoSurface = go.AddComponent<VideoSurface>();
